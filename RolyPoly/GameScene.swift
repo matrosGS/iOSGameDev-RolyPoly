@@ -24,6 +24,8 @@ class GameScene: SKScene {
     let roadBlockSize : CGFloat = 100.0
     
     let roly = SKSpriteNode(imageNamed: "roly1")
+    let background1 = SKSpriteNode(imageNamed: "background1")
+    let background2 = SKSpriteNode(imageNamed: "background2")
     var isGrounded = true
     
     override func sceneDidLoad() {
@@ -59,7 +61,35 @@ class GameScene: SKScene {
                                            timePerFrame: 0.1)
         
         roly.run(SKAction.repeatForever(zombieAnimation))
+        initBackground()
     }
+    
+    private func initBackground() {
+        background1.anchorPoint = CGPoint.zero
+        background1.position = CGPoint(x: -screenWidth, y: -screenHeight)
+        background1.zPosition = -15
+        self.addChild(background1)
+        
+        background2.anchorPoint = CGPoint.zero
+        background2.position = CGPoint(x: -screenWidth, y: background1.size.height - screenHeight - 6)
+        background2.zPosition = -15
+        self.addChild(background2)
+    }
+    
+    private func moveBackground(amount: CGFloat) {
+        background1.position = CGPoint(x: background1.position.x, y: background1.position.y - amount)
+        background2.position = CGPoint(x: background2.position.x, y: background2.position.y - amount)
+        
+        if(background1.position.y < (-background1.size.height - screenHeight)) {
+            background1.position = CGPoint(x: background1.position.x, y: background2.position.y + background2.size.height - 6)
+        }
+        
+        if(background2.position.y < (-background2.size.height - screenHeight)) {
+            background2.position = CGPoint(x: background2.position.x, y: background1.position.y + background1.size.height - 6)
+            
+        }
+    }
+
     
     func scheduleTimerWithTimeInterval() {
         timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.generateRoad), userInfo: nil, repeats: true)
@@ -132,7 +162,7 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-        
+        moveBackground(amount: 50)
         
         // Initialize _lastUpdateTime if it has not already been
         if (self.lastUpdateTime == 0) {
