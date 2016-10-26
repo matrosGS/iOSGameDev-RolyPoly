@@ -27,6 +27,7 @@ class GameScene: SKScene {
     let background1 = SKSpriteNode(imageNamed: "background1")
     let background2 = SKSpriteNode(imageNamed: "background2")
     var isGrounded = true
+    var lives = 3
     
     let lower : UInt32 = 0
     let upper : UInt32 = 500
@@ -42,6 +43,10 @@ class GameScene: SKScene {
         scheduleTimerWithTimeInterval()
         
         
+    }
+    
+    override func didEvaluateActions()  {
+        checkCollisions()
     }
     
     override func didMove(to view: SKView) {
@@ -96,7 +101,7 @@ class GameScene: SKScene {
 
     
     func scheduleTimerWithTimeInterval() {
-        timer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.generateRoad), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 50/self.rolySpeed, target: self, selector: #selector(self.generateRoad), userInfo: nil, repeats: true)
     
     }
     
@@ -117,7 +122,7 @@ class GameScene: SKScene {
        
         let pitTile = SKSpriteNode(imageNamed: "pit")
         pitTile.position = CGPoint(x: 0, y: screenHeight + roadBlockSize * 2)
-        pitTile.name = "road"
+        pitTile.name = "pit"
         pitTile.zPosition = 50
         pitTile.size = CGSize(width: roadBlockSize, height: roadBlockSize)
         addChild(pitTile)
@@ -137,11 +142,26 @@ class GameScene: SKScene {
         }
     }
     
+    func movePitDown(){
+        enumerateChildNodes(withName: "pit") { node, stop in
+            
+            if !node.hasActions() {
+                let moveNodeDown = SKAction.move(to: CGPoint(x: node.position.x, y: node.position.y - CGFloat(self.rolySpeed)), duration: 1)
+                node.run(moveNodeDown)
+            }
+            if node.position.y < (-1) * self.screenHeight - self.roadBlockSize - 50  {
+                node.removeFromParent()
+            }
+        }
+    }
+
+    
     func touchDown(atPoint pos : CGPoint) {
         if isGrounded {
             isGrounded = false
+            self.rolySpeed = 200
             
-            let jumpTime = 1.2 //if speed 100 time = 1.2
+            let jumpTime = 1.6 //if speed 100 time = 1.2
             let jump = SKAction.scale(by: 1.5, duration: jumpTime / 2)
             let land = SKAction.scale(by: 0.666667, duration: jumpTime / 2)
             roly.run(SKAction.sequence([jump, land]))
@@ -153,6 +173,7 @@ class GameScene: SKScene {
             
             let finish = SKAction.run({
                 self.isGrounded = true
+                self.rolySpeed = 100
             })
             
             let sequence = SKAction.sequence([block, SKAction.wait(forDuration: jumpTime), finish])
@@ -190,9 +211,39 @@ class GameScene: SKScene {
         
         
         moveRoadDown()
-        
-        
+        movePitDown()
         
         self.lastUpdateTime = currentTime
+    }
+    
+    func checkCollisions() {
+        var hitPits: [SKSpriteNode] = []
+        enumerateChildNodes(withName: "pit") { node, _ in
+            let pit = node as! SKSpriteNode
+            if node.frame.insetBy(dx: 5, dy: 5).intersects(self.roly.frame) && self.isGrounded {
+                hitPits.append(pit)
+            }
+        }
+        for p in hitPits {
+            rolyHitsPit(p)
+        }
+    }
+    
+    func rolyHitsPit(_ pit: SKSpriteNode) {
+        //todo run(pitCollisionSound)
+        lives -= 1
+        
+        let blinkTimes = 10.0
+        let duration = 3.0
+        let blinkAction = SKAction.customAction(withDuration: duration) { node, elapsedTime in
+            let slice = duration / blinkTimes
+            let remainder = Double(elapsedTime).truncatingRemainder(dividingBy: slice)
+            node.isHidden = remainder > slice / 2
+        }
+        let setHidden = SKAction.run() {
+            self.roly.isHidden = false
+        }
+        roly.run(SKAction.sequence([blinkAction, setHidden]))
+        
     }
 }
