@@ -22,7 +22,7 @@ class GameScene: SKScene {
     var screenWidth : CGFloat = 0.0
     var screenHeight : CGFloat = 0.0
     let roadBlockSize : CGFloat = 100.0
-    var rolySpeed : Double = 200.0
+    var rolySpeed : Double = 100.0
     let roly = SKSpriteNode(imageNamed: "roly1")
     let background1 = SKSpriteNode(imageNamed: "background1")
     let background2 = SKSpriteNode(imageNamed: "background2")
@@ -141,7 +141,7 @@ class GameScene: SKScene {
         if isGrounded {
             isGrounded = false
             
-            let jumpTime = 0.6 //if speed 100 time = 1.2
+            let jumpTime = 1.2 //if speed 100 time = 1.2
             let jump = SKAction.scale(by: 1.5, duration: jumpTime / 2)
             let land = SKAction.scale(by: 0.666667, duration: jumpTime / 2)
             roly.run(SKAction.sequence([jump, land]))
@@ -173,7 +173,7 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-        moveBackground(amount: 50)
+        moveBackground(amount: 25)
         
         // Initialize _lastUpdateTime if it has not already been
         if (self.lastUpdateTime == 0) {
