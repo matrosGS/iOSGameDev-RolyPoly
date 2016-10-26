@@ -22,9 +22,13 @@ class GameScene: SKScene {
     var screenWidth : CGFloat = 0.0
     var screenHeight : CGFloat = 0.0
     let roadBlockSize : CGFloat = 100.0
-    
+    var rolySpeed : Double = 200.0
     let roly = SKSpriteNode(imageNamed: "roly1")
     var isGrounded = true
+    
+    let lower : UInt32 = 0
+    let upper : UInt32 = 500
+    var randomNumber : UInt32 = 0
     
     override func sceneDidLoad() {
 
@@ -55,14 +59,14 @@ class GameScene: SKScene {
         textures.append(textures[1])
         
         // 4
-        var zombieAnimation: SKAction =  SKAction.animate(with: textures,
+        let zombieAnimation: SKAction =  SKAction.animate(with: textures,
                                            timePerFrame: 0.1)
         
         roly.run(SKAction.repeatForever(zombieAnimation))
     }
     
     func scheduleTimerWithTimeInterval() {
-        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.generateRoad), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(self.generateRoad), userInfo: nil, repeats: true)
     
     }
     
@@ -72,14 +76,21 @@ class GameScene: SKScene {
         roadTile.name = "road"
         roadTile.size = CGSize(width: roadBlockSize, height: roadBlockSize)
         addChild(roadTile)
+        
+        randomNumber = arc4random_uniform(upper - lower) + lower
+        if(randomNumber < 10) {
+            generatePit()
+        }
     }
     
     func generatePit() {
-        let roadTile = SKSpriteNode(imageNamed: "road")
-        roadTile.position = CGPoint(x: 0, y: screenHeight + roadBlockSize * 2)
-        roadTile.name = "road"
-        roadTile.size = CGSize(width: roadBlockSize, height: roadBlockSize)
-        addChild(roadTile)
+       
+        let pitTile = SKSpriteNode(imageNamed: "pit")
+        pitTile.position = CGPoint(x: 0, y: screenHeight + roadBlockSize * 2)
+        pitTile.name = "road"
+        pitTile.zPosition = 50
+        pitTile.size = CGSize(width: roadBlockSize, height: roadBlockSize)
+        addChild(pitTile)
 
     }
     
@@ -87,7 +98,7 @@ class GameScene: SKScene {
         enumerateChildNodes(withName: "road") { node, stop in
             
             if !node.hasActions() {
-                let moveNodeDown = SKAction.move(to: CGPoint(x: node.position.x, y: node.position.y - 100), duration: 1)
+                let moveNodeDown = SKAction.move(to: CGPoint(x: node.position.x, y: node.position.y - CGFloat(self.rolySpeed)), duration: 1)
                 node.run(moveNodeDown)
             }
             if node.position.y < (-1) * self.screenHeight - self.roadBlockSize - 50  {
@@ -100,7 +111,7 @@ class GameScene: SKScene {
         if isGrounded {
             isGrounded = false
             
-            let jumpTime = 0.6
+            let jumpTime = 0.6 //if speed 100 time = 1.2
             let jump = SKAction.scale(by: 1.5, duration: jumpTime / 2)
             let land = SKAction.scale(by: 0.666667, duration: jumpTime / 2)
             roly.run(SKAction.sequence([jump, land]))
@@ -147,7 +158,10 @@ class GameScene: SKScene {
             entity.update(deltaTime: dt)
         }
         
+        
         moveRoadDown()
+        
+        
         
         self.lastUpdateTime = currentTime
     }
